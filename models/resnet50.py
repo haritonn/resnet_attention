@@ -70,7 +70,7 @@ class ResNet(nn.Module):
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
         )
-        self.conv0.apply(self.init_conv0_weights)
+        self.conv0.apply(self._init_conv0_weights)
         
         self.conv1 = BottleneckGenerator(3, 64, 64, 64, 256, 1)
         self.conv2 = BottleneckGenerator(4, 256, 128, 128, 512, 2)
@@ -112,3 +112,10 @@ class ResNet(nn.Module):
         x = self.fc(x)
 
         return x
+
+#test
+if __name__ == "__main__":
+    model = ResNet(in_channels=3)
+    x = torch.randn(2, 3, 224, 224)
+    output = model(x)
+    print(output.shape)
