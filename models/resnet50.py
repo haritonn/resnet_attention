@@ -1,7 +1,7 @@
 import torch 
 import torch.nn as nn
 
-class BottleneckGenerator():
+class BottleneckGenerator(nn.Module):
     """
     Blocks generation for each conv layer in ResNet(50)
 
@@ -16,8 +16,8 @@ class BottleneckGenerator():
         self.blocks_amount = blocks_amount
         self.input_shape = input_shape
         self.shape1, self.shape2, self.shape3 = shape1, shape2, shape3
-        self.blocks = self._generate_blocks()
         self.stride = stride
+        self.blocks = self._generate_blocks()
 
     def _generate_blocks(self):
         """
@@ -49,7 +49,7 @@ class BottleneckGenerator():
         """
         for m in block.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, nonlinearity="relu", mode="fan_out")
+                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.ones_(m.weight)
                 nn.init.zeros_(m.bias)
