@@ -1,5 +1,63 @@
 import torch 
 import torch.nn as nn
+class BottleneckBlock(nn.Module):
+    """
+    Single Bottleneck Block with SKIP CONNECTION (Identity Mapping)
+    
+    Structure: 1x1 (reduce) -> 3x3 (main conv) -> 1x1 (expand) + skip connection
+    
+    Args:
+        in_channels: input channel dimension
+        mid_channels: intermediate channel dimension (bottleneck)
+        out_channels: output channel dimension (usually mid_channels * 4)
+        stride: stride for the 3x3 conv layer (controls spatial downsampling)
+    """
+    def __init__(self, in_channels, mid_channels, out_channels, stride=1):
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_channels, mid_channels, kernel_size=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(mid_channels)
+
+        self.conv2 = nn.Conv2d(mid_channels, mid_channels, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(mid_channels)
+        
+        self.conv3 = nn.Conv2d(mid_channels, out_channels, kernel_size=1, bias=False)
+        self.bn3 = nn.BatchNorm2d(out_channels)
+        
+        self.relu = nn.ReLU(inplace=True)
+        
+        self.skip_connection = nn.Identity()
+        if stride != 1 or in_channels != out_channels:
+            self.skip_connection = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(out_channels)
+            )
+        self._init_weights()
+    
+    def _init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.ones_(m.weight)
+                nn.init.zeros_(m.bias)
+    
+    def forward(self, x):
+        identity = self.skip_connection(x)  
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+        
+        out = self.conv2(out)
+        out = self.bn2(out)
+        out = self.relu(out)
+        
+        out = self.conv3(out)
+        out = self.bn3(out)
+        
+        out = out + identity
+        out = self.relu(out)
+        
+        return out
 
 class BottleneckGenerator(nn.Module):
     """
@@ -11,48 +69,17 @@ class BottleneckGenerator(nn.Module):
         shape1-3: shapes to represent in blocks
         stride: stride for each conv layer (1 as default)
     """
-    def __init__(self, blocks_amount, input_shape, shape1, shape2, shape3, stride=1):
+    def __init__(self, blocks_count, in_channels, mid_channels, out_channels, stride=1):
         super().__init__()
-        self.blocks_amount = blocks_amount
-        self.input_shape = input_shape
-        self.shape1, self.shape2, self.shape3 = shape1, shape2, shape3
-        self.stride = stride
-        self.blocks = self._generate_blocks()
+        blocks = []
+        blocks.append(BottleneckBlock(in_channels, mid_channels, out_channels, stride=stride))
+        for _ in range(1, blocks_count):
+            blocks.append(BottleneckBlock(out_channels, mid_channels, out_channels, stride=1))
 
-    def _generate_blocks(self):
-        """
-        Generates bottleneck blocks (1x1, 3x3, 1x1)
-        """
-        blocks = nn.ModuleList()
-        for i in range(self.blocks_amount):
-            in_channels = self.input_shape if i == 0 else self.shape3 
-            curr_stride = self.stride if i == 0 else 1
-
-            block = nn.Sequential(
-            nn.Conv2d(in_channels, self.shape1, kernel_size=1, bias=False),
-            nn.BatchNorm2d(self.shape1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(self.shape1, self.shape2, kernel_size=3, padding=1, stride=curr_stride, bias=False),
-            nn.BatchNorm2d(self.shape2),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(self.shape2, self.shape3, kernel_size=1, bias=False),
-            nn.BatchNorm2d(self.shape3),
-            )
-            
-            self._init_weights(block)
-            blocks.append(block)
-        return blocks
-
-    def _init_weights(self, block):
-        """
-        He (Kaiming) weight initialization with normal distribution.
-        """
-        for m in block.modules():
-            if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
-            elif isinstance(m, nn.BatchNorm2d):
-                nn.init.ones_(m.weight)
-                nn.init.zeros_(m.bias)
+        self.blocks = nn.Sequential(*blocks)
+    
+    def forward(self, x):
+        return self.blocks(x)
 
 class ResNet(nn.Module):
     """
@@ -61,7 +88,7 @@ class ResNet(nn.Module):
     Args:
         in_channels - shape of input for this model
     """
-    def __init__(self, in_channels):
+    def __init__(self, in_channels=3, num_classes=1000):
         super().__init__()
         self.in_channels = in_channels
         self.conv0 = nn.Sequential(
@@ -72,13 +99,13 @@ class ResNet(nn.Module):
         )
         self.conv0.apply(self._init_conv0_weights)
         
-        self.conv1 = BottleneckGenerator(3, 64, 64, 64, 256, 1)
-        self.conv2 = BottleneckGenerator(4, 256, 128, 128, 512, 2)
-        self.conv3 = BottleneckGenerator(6, 512, 256, 256, 1024, 2)
-        self.conv4 = BottleneckGenerator(3, 1024, 512, 512, 2048, 1)
+        self.conv1 = BottleneckGenerator(3, 64, 64, 256, 1)
+        self.conv2 = BottleneckGenerator(4, 256, 128, 512, 2)
+        self.conv3 = BottleneckGenerator(6, 512, 256, 1024, 2)
+        self.conv4 = BottleneckGenerator(3, 1024, 512, 2048, 1)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(2048, 1000)
+        self.fc = nn.Linear(2048, num_classes)
 
     def _init_conv0_weights(self, m):
         """
