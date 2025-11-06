@@ -7,9 +7,8 @@ class EarlyStopping:
     """
     Class for early stopping implementation
     """
-    def __init__(self, patience=5, epsilon=.005, verbose=False):
+    def __init__(self, patience=5, epsilon=.005):
         self.patience = patience
-        self.verbose = verbose
         self.epsilon = epsilon
 
         self.best_score = 100

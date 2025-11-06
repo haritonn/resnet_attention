@@ -1,8 +1,8 @@
 import torch 
 from torch.utils.data import Dataset
 
-from utils import load_cifar100_file, reshape_image
-from augmentation import transform_pipeline
+from utils.utils import load_cifar100_file, reshape_image
+from utils.augmentation import transform_pipeline
 
 class CifarDataset(Dataset):
     """

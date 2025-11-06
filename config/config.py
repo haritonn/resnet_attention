@@ -3,7 +3,8 @@ import torch
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # Directories
-DATA_DIR = './data'
+TRAIN_DIR = './data/train'
+TEST_DIR = './data/test'
 CHECKPOINTS_DIR = './checkpoints' # Checkpoints of trained model
 TRAIN_RESULTS_DIR = './train_results' # Plots of train process
 
@@ -23,4 +24,4 @@ RANDOM_SEED = 42
 WEIGHT_DECAY = 2e-4 # L2
 VAL_SPLIT = .2
 NUM_CLASSES = 100 # CIFAR-100
-SGD_MOMENTUM = .9 # In case of using SGD (current approach)
+SGD_MOMENTUM = .9

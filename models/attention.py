@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import config.config as config
 
 class ChannelAttention(nn.Module):
     """
@@ -11,7 +12,7 @@ class ChannelAttention(nn.Module):
         channels_in - channels in from previous convolutional layer 
         reduction - coefficient to reduce (some autoencoder action)
     """
-    def __init__(self, channels_in, reduction):
+    def __init__(self, channels_in, reduction=config.ATTENTION_REDUCTION):
         super().__init__()
         self.channels_in = channels_in
         self.reduction = reduction

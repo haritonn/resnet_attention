@@ -1,7 +1,7 @@
 import torch 
 import torch.nn as nn
 
-from attention import ChannelAttention 
+from models.attention import ChannelAttention 
 
 class BottleneckBlock(nn.Module):
     """
