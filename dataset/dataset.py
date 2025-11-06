@@ -19,13 +19,13 @@ class CifarDataset(Dataset):
         self.fine_labels = loaded[b'fine_labels']
         self.is_train = is_train
 
-
     def __len__(self):
         return len(self.images)
 
     def __getitem__(self, idx):
         labels_idx = self.fine_labels[idx]
         images_idx = self.images[idx]
+
         if self.is_train:
             images_idx = self.transform_pipeline(image=images_idx)['image']
 

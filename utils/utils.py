@@ -11,5 +11,5 @@ def load_cifar100_file(filename):
 def reshape_image(image_flatten):
     image_shaped = image_flatten.reshape(3, 32, 32)
 
-    return image.astype(np.uint8)
+    return image.astype(np.uint8) / float(255) #[0, 255] -> [0, 1]
 
