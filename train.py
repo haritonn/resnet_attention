@@ -34,13 +34,13 @@ for epoch in range(1, config.NUM_EPOCHS+1):
     train_loss = .0
     total_loss = 0
     train_correct = 0
-    pbar = tqdm.tqdm(train_loader, desc=f'Epoch {epoch} [Train]', unit='batch')
+    pbar_train = tqdm.tqdm(train_loader, desc=f'Epoch {epoch} [Train]', unit='batch')
 
-    for batch, labels in pbar:
+    for batch, labels in pbar_train:
         batch, labels = batch.to(config.DEVICE), labels.to(config.DEVICE)
-        output = model(batch)
+        outputs = model(batch)
 
-        loss = criterion(output, labels)
+        loss = criterion(outputs, labels)
 
         optimizer.zero_grad()
         loss.backward()
@@ -48,17 +48,17 @@ for epoch in range(1, config.NUM_EPOCHS+1):
 
         train_loss += loss.item()
         _, predicted = torch.max(outputs.data, 1)
-        train_total += labels.size(0)
+        total_loss += labels.size(0)
         train_correct += (predicted == labels).sum().item()
 
 
         pbar_train.set_postfix({
             'loss': f'{loss.item():.4f}',
-            'acc': f'{100 * train_correct / train_total:.2f}%'
+            'acc': f'{100 * train_correct / total_loss:.2f}%'
         })
     
     avg_train_loss = train_loss / len(train_loader)
-    avg_train_acc = 100 * train_correct / train_totalg
+    avg_train_acc = 100 * train_correct / train_total
 
     # Early stopping checking
     model.eval()
