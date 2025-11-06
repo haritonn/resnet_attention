@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader, random_split
 from matplotlib import pyplot as plt
 import pickle
 import tqdm
+import os
 
 import config.config as config
 from utils.utils import EarlyStopping
@@ -20,7 +21,7 @@ model = ResNet(in_channels=3, num_classes=config.NUM_CLASSES).to(config.DEVICE)
 earlystop = EarlyStopping(patience=config.EARLY_STOPPING_PATIENCE)
 
 criterion = getattr(torch.nn, config.CRITERION)()
-optimizer = torch.optim.SGD(model.parameters(), lr=config.LEARNING_RATE, momentum=.9, weight_decay=config.WEIGHT_DECAY)
+optimizer = torch.optim.Adam(model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY)
 
 history = {
     'train_loss': [],
@@ -30,16 +31,18 @@ history = {
 }
 
 for epoch in range(1, config.NUM_EPOCHS+1):
+    torch.cuda.empty_cache()
+
     model.train()
-    train_loss = .0
-    total_loss = 0
+    model.zero_grad()
+    train_loss = 0.0
     train_correct = 0
+    train_total = 0 
     pbar_train = tqdm.tqdm(train_loader, desc=f'Epoch {epoch} [Train]', unit='batch')
 
     for batch, labels in pbar_train:
         batch, labels = batch.to(config.DEVICE), labels.to(config.DEVICE)
         outputs = model(batch)
-
         loss = criterion(outputs, labels)
 
         optimizer.zero_grad()
@@ -48,13 +51,12 @@ for epoch in range(1, config.NUM_EPOCHS+1):
 
         train_loss += loss.item()
         _, predicted = torch.max(outputs.data, 1)
-        total_loss += labels.size(0)
+        train_total += labels.size(0)  
         train_correct += (predicted == labels).sum().item()
-
 
         pbar_train.set_postfix({
             'loss': f'{loss.item():.4f}',
-            'acc': f'{100 * train_correct / total_loss:.2f}%'
+            'acc': f'{100 * train_correct / train_total:.2f}%'  
         })
     
     avg_train_loss = train_loss / len(train_loader)
@@ -68,7 +70,7 @@ for epoch in range(1, config.NUM_EPOCHS+1):
 
     pbar_val = tqdm.tqdm(
         val_loader, 
-        desc=f'Epoch {epoch+1}/{config.NUM_EPOCHS} [Val]', 
+        desc=f'Epoch {epoch}/{config.NUM_EPOCHS} [Val]', 
         unit='batch'
     )
 
@@ -85,7 +87,7 @@ for epoch in range(1, config.NUM_EPOCHS+1):
 
             pbar_val.set_postfix({
                 'loss': f'{loss.item():.4f}',
-                'acc': f'{100 * val_correct / val_total}'
+                'acc': f'{100 * val_correct / val_total} %'
             })
 
     avg_val_loss = val_loss / len(val_loader)
@@ -101,5 +103,32 @@ for epoch in range(1, config.NUM_EPOCHS+1):
         print('Eearly stopping triggered!')
         model.load_state_dict(best_state)
 
+
+os.makedirs(config.CHECKPOINTS_DIR, exist_ok=True)
 torch.save(model.state_dict(), f'{config.CHECKPOINTS_DIR}/resnet50_cifar100.pth')
 print(f'Training complete. Model saved to {config.CHECKPOINTS_DIR}')
+
+
+os.mkdir(config.TRAIN_RESULTS_DIR, exist_ok=True)
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+
+# Plot losses
+ax1.plot(history['train_loss'], label='Train Loss')
+ax1.plot(history['val_loss'], label='Val Loss')
+ax1.set_xlabel('Epoch')
+ax1.set_ylabel('Loss')
+ax1.set_title('Training and Validation Loss')
+ax1.legend()
+ax1.grid(True)
+
+# Plot accuracies
+ax2.plot(history['train_acc'], label='Train Acc')
+ax2.plot(history['val_acc'], label='Val Acc')
+ax2.set_xlabel('Epoch')
+ax2.set_ylabel('Accuracy (%)')
+ax2.set_title('Training and Validation Accuracy')
+ax2.legend()
+ax2.grid(True)
+
+plt.tight_layout()
+plt.savefig(f'{config.TRAIN_RESULTS_DIR}/training_history.png', dpi=150)

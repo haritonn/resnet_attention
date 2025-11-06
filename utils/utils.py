@@ -20,11 +20,13 @@ class EarlyStopping:
             self.curr_patience += 1
             if self.curr_patience >= self.patience:
                 return False, self.curr_model_state
+            else:
+                return True, self.curr_model_state
         else:
             self.curr_patience = 0
             self.best_score = curr_score
             self.curr_model_state = copy.deepcopy(model.state_dict())
-            return True, None
+            return True, self.curr_model_state
 
 
 def load_cifar100_file(filename):
