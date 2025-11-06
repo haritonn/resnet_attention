@@ -1,8 +1,11 @@
 import torch 
 import torch.nn as nn
+
+from attention import ChannelAttention 
+
 class BottleneckBlock(nn.Module):
     """
-    Single Bottleneck Block with SKIP CONNECTION (Identity Mapping)
+    Single Bottleneck Block with skip connection 
     
     Structure: 1x1 (reduce) -> 3x3 (main conv) -> 1x1 (expand) + skip connection
     
@@ -19,9 +22,11 @@ class BottleneckBlock(nn.Module):
 
         self.conv2 = nn.Conv2d(mid_channels, mid_channels, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(mid_channels)
-        
+
         self.conv3 = nn.Conv2d(mid_channels, out_channels, kernel_size=1, bias=False)
         self.bn3 = nn.BatchNorm2d(out_channels)
+        
+        self.attention = ChannelAttention(out_channels, reduction=16)
         
         self.relu = nn.ReLU(inplace=True)
         
@@ -53,7 +58,9 @@ class BottleneckBlock(nn.Module):
         
         out = self.conv3(out)
         out = self.bn3(out)
-        
+
+        out = self.attention(out)
+
         out = out + identity
         out = self.relu(out)
         
@@ -145,4 +152,4 @@ if __name__ == "__main__":
     model = ResNet(in_channels=3)
     x = torch.randn(2, 3, 224, 224)
     output = model(x)
-    print(output.shape)
+    print(output)
