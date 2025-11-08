@@ -3,11 +3,13 @@ import copy
 import torch
 import numpy as np
 
+
 class EarlyStopping:
     """
     Class for early stopping implementation
     """
-    def __init__(self, patience=5, epsilon=.005):
+
+    def __init__(self, patience=5, epsilon=0.005):
         self.patience = patience
         self.epsilon = epsilon
 
@@ -29,14 +31,15 @@ class EarlyStopping:
             return True, self.curr_model_state
 
 
+# Loader for default cifar100 dataset
 def load_cifar100_file(filename):
-    with open(filename, 'rb') as f:
-        data_dict = pickle.load(f, encoding='bytes')
+    with open(filename, "rb") as f:
+        data_dict = pickle.load(f, encoding="bytes")
 
     return data_dict
 
+# Reshaping 1d array to image with 3 channels
 def reshape_image(image_flatten):
     image_shaped = image_flatten.reshape(3, 32, 32)
 
-    return image_shaped.astype(np.uint8) / float(255) #[0, 255] -> [0, 1]
-
+    return image_shaped.astype(np.uint8) / float(255)  # [0, 255] -> [0, 1]
