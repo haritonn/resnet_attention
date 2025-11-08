@@ -109,7 +109,7 @@ torch.save(model.state_dict(), f'{config.CHECKPOINTS_DIR}/resnet50_cifar100.pth'
 print(f'Training complete. Model saved to {config.CHECKPOINTS_DIR}')
 
 
-os.mkdir(config.TRAIN_RESULTS_DIR, exist_ok=True)
+os.makedirs(config.TRAIN_RESULTS_DIR, exist_ok=True)
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
 
 # Plot losses
