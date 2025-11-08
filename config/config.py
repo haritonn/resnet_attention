@@ -16,7 +16,7 @@ ATTENTION_REDUCTION = 16  # For channel attention mechanism
 # Train parameters
 BATCH_SIZE = 32
 LEARNING_RATE = 3e-4
-NUM_EPOCHS = 30
+NUM_EPOCHS = 10
 CRITERION = (
     "CrossEntropyLoss"  # Using getattr to parse, so write like name in PyTorch module
 )
