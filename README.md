@@ -13,11 +13,11 @@ The launch was performed using the same parameters as in `config/config.py`.
 
 ## Todo
 - [ ] Inference (with plotting);
-- [ ] Add dependecies;
-- [ ] Attention plotting;
+- [x] Add dependecies;
+- [x] Attention plotting;
 - [ ] Parameterize ResNet depth;
-- [ ] Integration with MLFlow / ClearML;
-- [ ] Metrics (F-score, confusion matrix);
-- [ ] Comparison with default resnet;
+- [x] Integration with MLFlow / ClearML;
+- [x] Metrics (F-score, confusion matrix);
+- [x] Comparison with default resnet;
 - [ ] Optimization (ONNX);
 - [ ] Add to readme after all.
