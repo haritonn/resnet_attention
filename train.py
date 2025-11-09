@@ -17,11 +17,13 @@ from models.resnet50 import ResNet
 parser = argparse.ArgumentParser()
 parser.add_argument("--model_type", type=str, choices=['attention', 'baseline'],
                     default='attention', help='Model type: with attention or default.')
-
+parser.add_argument("--clearml-name", type=str, default="Resnet_attention_comparison", help="Naming of project in ClearML.")
+parser.add_argument("--checkpoints", type=str, default=config.CHECKPOINTS_DIR, help="Folder for checkpoints storage.")
+parser.add_argument("--plots", type=str, default=config.TRAIN_RESULTS_DIR, help="Folder for training plots.")
 args = parser.parse_args()
 
 task = Task.init(
-    project_name="Resnet_attention_comparison",
+    project_name=args.clearml_name,
     task_name=f"Resnet_{args.model_type}",
     tags=[args.model_type, 'cifar100']
 )
@@ -206,16 +208,16 @@ best_acc = max(history['val_acc'])
 task.get_logger().report_single_value('Best validation accuracy', best_acc)
 
 # Saving checkpoints 
-os.makedirs(config.CHECKPOINTS_DIR, exist_ok=True)
-model_path = f"{config.CHECKPOINTS_DIR}/resnet50_{args.model_type}.pth"
+os.makedirs(args.checkpoints, exist_ok=True)
+model_path = f"{args.checkpoints}/resnet50_{args.model_type}.pth"
 torch.save(model.state_dict(), model_path)
-print(f"Training complete. Model saved to {config.CHECKPOINTS_DIR}")
+print(f"Training complete. Model saved to {args.checkpoints}")
 
 task.upload_artifact(f'model_weights_{args.model_type}', model_path)
 
 
 # Plotting results
-os.makedirs(config.TRAIN_RESULTS_DIR, exist_ok=True)
+os.makedirs(args.plotting, exist_ok=True)
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
 
 # Plot losses
@@ -238,7 +240,7 @@ ax2.grid(True)
 
 # Saving results
 plt.tight_layout()
-plotting_path = f"{config.TRAIN_RESULTS_DIR}/training_{args.model_type}.png"
+plotting_path = f"{args.plotting}/training_{args.model_type}.png"
 plt.savefig(plotting_path, dpi=150)
 
 task.get_logger().report_matplotlib_figure(
