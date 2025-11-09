@@ -9,7 +9,9 @@ This is an implementation of ResNet50 with channel attention mechanism 'from scr
 
 The launch was performed using the same parameters as in `config/config.py`.
 
-<img width="1800" height="600" alt="image" src="https://github.com/user-attachments/assets/2b9244d9-3cf1-4e8f-bae0-9e832d8c690c" />
+![Training Accuracy](imgs/Train_acc.png)
+![Training F-score](imgs/Train_fscore.png)
+![Training Loss](imgs/Train_loss.png)
 
 ## Todo
 - [ ] Inference (with plotting);
