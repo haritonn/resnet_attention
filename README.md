@@ -8,9 +8,11 @@ This is an implementation of ResNet50 with channel attention mechanism 'from scr
 ## Training results
 
 The launch was performed using the same parameters as in `config/config.py`.
-
+### Accuracy
 ![Training Accuracy](imgs/Train_acc.png)
+### F-score
 ![Training F-score](imgs/Train_fscore.png)
+### Loss (CrossEntropyLoss)
 ![Training Loss](imgs/Train_loss.png)
 
 ## Todo
