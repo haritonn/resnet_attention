@@ -38,6 +38,7 @@ def load_cifar100_file(filename):
 
     return data_dict
 
+
 # Reshaping 1d array to image with 3 channels
 def reshape_image(image_flatten):
     image_shaped = image_flatten.reshape(3, 32, 32)

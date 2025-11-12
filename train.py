@@ -15,21 +15,41 @@ from dataset.dataset import CifarDataset
 from models.resnet50 import ResNet
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--model_type", type=str, choices=['attention', 'baseline'],
-                    default='attention', help='Model type: with attention or default.')
-parser.add_argument("--clearml-name", type=str, default="Resnet_attention_comparison", help="Naming of project in ClearML.")
-parser.add_argument("--checkpoints", type=str, default=config.CHECKPOINTS_DIR, help="Folder for checkpoints storage.")
-parser.add_argument("--plots", type=str, default=config.TRAIN_RESULTS_DIR, help="Folder for training plots.")
+parser.add_argument(
+    "--model_type",
+    type=str,
+    choices=["attention", "baseline"],
+    default="attention",
+    help="Model type: with attention or default.",
+)
+parser.add_argument(
+    "--clearml-name",
+    type=str,
+    default="Resnet_attention_comparison",
+    help="Naming of project in ClearML.",
+)
+parser.add_argument(
+    "--checkpoints",
+    type=str,
+    default=config.CHECKPOINTS_DIR,
+    help="Folder for checkpoints storage.",
+)
+parser.add_argument(
+    "--plots",
+    type=str,
+    default=config.TRAIN_RESULTS_DIR,
+    help="Folder for training plots.",
+)
 args = parser.parse_args()
 
 task = Task.init(
     project_name=args.clearml_name,
     task_name=f"Resnet_{args.model_type}",
-    tags=[args.model_type, 'cifar100']
+    tags=[args.model_type, "cifar100"],
 )
 
-task.connect_configuration(configuration=config.__dict__, name='training_config')
-task.set_parameter('model_type', args.model_type)
+task.connect_configuration(configuration=config.__dict__, name="training_config")
+task.set_parameter("model_type", args.model_type)
 
 # Loading data, making train/val split
 all_data = CifarDataset(config.TRAIN_DIR, is_train=config.USING_AUGMENTATIONS)
@@ -43,7 +63,7 @@ train_loader = DataLoader(train_data, batch_size=config.BATCH_SIZE, shuffle=True
 val_loader = DataLoader(val_data, batch_size=config.BATCH_SIZE, shuffle=False)
 
 # Core objects init: model, early stopping, criterion...
-if args.model_type == 'attention':
+if args.model_type == "attention":
     model = ResNet(in_channels=3, num_classes=config.NUM_CLASSES).to(config.DEVICE)
     print("Using ResNet with Channel Attention")
 else:
@@ -57,8 +77,10 @@ optimizer = torch.optim.Adam(
 )
 
 total_params = sum(p.numel() for p in model.parameters())
-task.get_logger().report_single_value('total params', total_params)
-print(f'Total parameters: {total_params}')
+trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+task.get_logger().report_single_value("total params", total_params)
+task.get_logger().report_single_value("trainable params", trainable_params)
+print(f"Total parameters: {total_params}")
 
 # For future plotting
 history = {"train_loss": [], "val_loss": [], "train_acc": [], "val_acc": []}
@@ -144,56 +166,33 @@ for epoch in range(1, config.NUM_EPOCHS + 1):
     history["train_acc"].append(avg_train_acc)
     history["val_acc"].append(avg_val_acc)
 
-    f_train = f1_score(all_labels_train, all_predictions_train, average='weighted')
-    f_val = f1_score(all_labels_val, all_predictions_val, average='weighted')
+    f_train = f1_score(all_labels_train, all_predictions_train, average="weighted")
+    f_val = f1_score(all_labels_val, all_predictions_val, average="weighted")
 
     logger = task.get_logger()
     # Loss
     logger.report_scalar(
-        title='Loss',
-        series='Train',
-        value=avg_train_loss,
-        iteration=epoch
+        title="Loss", series="Train", value=avg_train_loss, iteration=epoch
     )
     logger.report_scalar(
-        title='Loss',
-        series='Val',
-        value=avg_val_loss,
-        iteration=epoch
+        title="Loss", series="Val", value=avg_val_loss, iteration=epoch
     )
     # Accuracy
     logger.report_scalar(
-        title='Accuracy',
-        series='Train',
-        value=avg_train_acc,
-        iteration=epoch
+        title="Accuracy", series="Train", value=avg_train_acc, iteration=epoch
     )
     logger.report_scalar(
-        title='Accuracy',
-        series='Val',
-        value=avg_val_acc,
-        iteration=epoch
+        title="Accuracy", series="Val", value=avg_val_acc, iteration=epoch
     )
     # f1_score
     logger.report_scalar(
-        title='F-score',
-        series='Train',
-        value=f_train,
-        iteration=epoch
+        title="F-score", series="Train", value=f_train, iteration=epoch
     )
-    logger.report_scalar(
-        title='F-score',
-        series='Val',
-        value=f_val,
-        iteration=epoch
-    )
+    logger.report_scalar(title="F-score", series="Val", value=f_val, iteration=epoch)
 
     cm = confusion_matrix(all_labels_val, all_predictions_val)
     logger.report_confusion_matrix(
-        title='Confusion Matrix', 
-        series='Validation',  
-        matrix=cm, 
-        iteration=epoch
+        title="Confusion Matrix", series="Validation", matrix=cm, iteration=epoch
     )
     # If early stopping triggered - using best model at this point
     # and exiting training process.
@@ -204,16 +203,16 @@ for epoch in range(1, config.NUM_EPOCHS + 1):
         break
 
 
-best_acc = max(history['val_acc'])
-task.get_logger().report_single_value('Best validation accuracy', best_acc)
+best_acc = max(history["val_acc"])
+task.get_logger().report_single_value("Best validation accuracy", best_acc)
 
-# Saving checkpoints 
+# Saving checkpoints
 os.makedirs(args.checkpoints, exist_ok=True)
 model_path = f"{args.checkpoints}/resnet50_{args.model_type}.pth"
 torch.save(model.state_dict(), model_path)
 print(f"Training complete. Model saved to {args.checkpoints}")
 
-task.upload_artifact(f'model_weights_{args.model_type}', model_path)
+task.upload_artifact(f"model_weights_{args.model_type}", model_path)
 
 
 # Plotting results
@@ -244,8 +243,8 @@ plotting_path = f"{args.plotting}/training_{args.model_type}.png"
 plt.savefig(plotting_path, dpi=150)
 
 task.get_logger().report_matplotlib_figure(
-    title='Training History',
-    series=f'{args.model_type} Model',
+    title="Training History",
+    series=f"{args.model_type} Model",
     figure=fig,
-    report_interactive=False
+    report_interactive=False,
 )

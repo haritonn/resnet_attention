@@ -16,7 +16,7 @@ The launch was performed using the same parameters as in `config/config.py`.
 ![Training Loss](imgs/Train_loss.png)
 
 ## Todo
-- [ ] Inference (with plotting);
+- [x] Inference (with plotting);
 - [x] Add dependecies;
 - [x] Attention plotting;
 - [ ] Parameterize ResNet depth;
