@@ -19,9 +19,9 @@ The launch was performed using the same parameters as in `config/config.py`.
 - [x] Inference (with plotting);
 - [x] Add dependecies;
 - [x] Attention plotting;
-- [ ] Parameterize ResNet depth;
+- [ ] ~~Parameterize ResNet depth;~~
 - [x] Integration with MLFlow / ClearML;
 - [x] Metrics (F-score, confusion matrix);
 - [x] Comparison with default resnet;
-- [ ] Optimization (ONNX);
-- [ ] Add to readme after all.
+- [ ] Optimization (ONNX); (maybe later)
+- [x] Add to readme after all.
