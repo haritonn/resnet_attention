@@ -3,7 +3,41 @@
 This is an implementation of ResNet50 with channel attention mechanism 'from scratch'. The aim of the project is to demonstrate the practical implementation of channel attention in greater depth. Also here applied:
 * Weight initialization (Kaiming);
 * Early stopping;
-* ... (see todo list)
+* Clearml integration;
+* Attention visualization;
+* Comparison with default resnet;
+* ~~ONNX optimization~~ maybe later :)).
+
+## Launching
+
+Requirements:
+* python (ofc)
+* uv package manager
+
+### Installtion commands
+```bash
+git clone git@github.com:haritonn/resnet_attention.git
+cd resnet_attention
+uv sync
+```
+
+### Running commands
+```bash
+uv run train.py # training
+uv run inference.py # inference
+
+# train both models
+chmod +x ./train_both.sh
+./train_both
+```
+
+### Running arguments
+```txt
+--model_type - attention or baseline training
+--clearml-name - naming of project in clearml
+--checkpoints - folder for checkpoints storage
+--plots - folder for plots storage
+```
 
 ## Training results
 
